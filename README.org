@@ -6,7 +6,7 @@
 - [[#to-see-the-results][To see The results]]
 
 * Introduction
-Some exercises from http://www.learnopengl.com, the examples are implemented in C language.
+Some exercises from [[http://www.learnopengl.com][learnopengl.com]], the examples are implemented in C language.
 * What you need to compile those examples
 ** tools
 1. cmake
