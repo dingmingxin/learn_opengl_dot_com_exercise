@@ -1,1 +1,20 @@
-* learnopengl.com
+* Learnopengl.com
+Some exercises from http://www.learnopengl.com, the examples are implemented in C language.
+* What you need to compile those examples
+** tools
+1. cmake
+2. cc or gcc
+3. make
+** libs
+*** common
+**** image load lib
+[[https://github.com/nothings/stb/][stb single-file public domain libraries for C/C++]]
+**** opengl math lib(in c)
+[[https://github.com/Kazade/kazmath][A C math library targeted at games]]
+*** macos
+#+begin_src shell
+  sudo port install glfw glew
+#+end_src
+*** TODO linux
+
+
