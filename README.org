@@ -26,7 +26,8 @@ Some exercises from [[http://www.learnopengl.com][learnopengl.com]], the example
 * To see The results
 1. git clone ...
 2. git submodule update --init
-3. cmake .
-4. make
+3. cd kazmath/kazmath && cmake . && make kazmath && cd -
+4. cmake .
+5. make
 
 
