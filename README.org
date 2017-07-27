@@ -17,7 +17,7 @@ Some exercises from [[http://www.learnopengl.com][learnopengl.com]], the example
 **** image load lib
 [[https://github.com/nothings/stb/][stb single-file public domain libraries for C/C++]]
 **** opengl math lib(in c)
-[[https://github.com/Kazade/kazmath][A C math library targeted at games]]
+[[https://github.com/Kazade/kazmath][Kazade/kazmath - A C math library targeted at games]]
 *** macos
 #+begin_src shell
   sudo port install glfw glew
