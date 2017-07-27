@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 2.8)
 project (t1)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+cmake_policy(SET CMP0015 NEW)
 
 set(HELLO_SRC_DIR "src")
 
@@ -16,6 +17,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	include_directories(/opt/local/include)
 	link_directories(/opt/local/lib)
+	link_directories(./src/kazmath/kazmath)
 
 	#find libs
 	find_package(OpenGL)
@@ -59,3 +61,6 @@ target_link_libraries(004_texture_1 ${LINK_LIBS})
 
 add_executable(004_texture_2 ${HELLO_SRC_DIR}/004_texture_2.c)
 target_link_libraries(004_texture_2 ${LINK_LIBS})
+
+add_executable(005_transform_1 ${HELLO_SRC_DIR}/005_transform_1.c)
+target_link_libraries(005_transform_1 ${LINK_LIBS} kazmath)
