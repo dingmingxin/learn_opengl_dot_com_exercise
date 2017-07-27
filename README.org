@@ -16,5 +16,10 @@ Some exercises from http://www.learnopengl.com, the examples are implemented in 
   sudo port install glfw glew
 #+end_src
 *** TODO linux
+* To see The results
+1. git clone ...
+2. git submodule update --init
+3. cmake .
+4. make
 
 
