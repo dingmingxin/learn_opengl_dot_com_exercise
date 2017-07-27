@@ -1,0 +1,3 @@
+[submodule "src/kazmath"]
+	path = src/kazmath
+	url = https://github.com/Kazade/kazmath.git
