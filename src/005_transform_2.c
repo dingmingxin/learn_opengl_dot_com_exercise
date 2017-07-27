@@ -1,0 +1,264 @@
+#include <stdlib.h>
+#include <stdio.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#include "kazmath/kazmath/vec2.h"
+#include "kazmath/kazmath/vec3.h"
+#include "kazmath/kazmath/vec4.h"
+#include "kazmath/kazmath/mat4.h"
+
+#define GLEW_STATIC
+#include <GL/glew.h>
+
+#include <GLFW/glfw3.h>
+
+const GLuint WIN_WIDTH = 800, WIN_HEIGHT = 600;
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+
+//shaders
+
+const GLchar* vertexShaderSource = "#version 330 core\n"
+	"layout (location = 0) in vec3 aPos; \n"
+	"layout (location = 1) in vec3 aColor; \n"
+	"layout (location = 2) in vec2 aTexCoord; \n"
+	"out vec3 ourColor; \n"
+	"out vec2 TexCoord; \n"
+	"uniform mat4 transform; \n"
+	"void main()\n"
+	"{\n"
+	"gl_Position = transform * vec4(aPos, 1.0); \n"
+	"ourColor = aColor;\n"
+	"TexCoord = vec2(aTexCoord.x, 1.0-aTexCoord.y);\n"
+	"}\0";
+
+const GLchar* fragmentShaderSource = "#version 330 core\n"
+	"out vec4 FragColor;\n"
+	"in vec3 ourColor;\n"
+	"in vec2 TexCoord;\n"
+	"uniform sampler2D texture1;\n"
+	"uniform sampler2D texture2;\n"
+	"void main()\n"
+	"{\n"
+	"FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.3);\n" //get fancy colors on texture
+	"}\n\0";
+
+void set_tex_parameters()
+{
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void bind_vetex_attributes(GLuint *pVAO, GLuint *pVBO, GLuint *pEBO)
+{
+    // Set up vertex data (and buffer(s)) and attribute pointers
+    GLfloat vertices[] = {
+    	//position        //color             //texture coords
+         0.5f,   0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,// top right  
+         0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,// bottom right 
+         -0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,// bottom left   
+         -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top left
+    };
+
+	unsigned int indices[] = {  
+		0, 1, 3, // first triangle
+		1, 2, 3  // second triangle
+	};
+
+    glGenVertexArrays(1, pVAO);
+    glGenBuffers(1, pVBO);
+    glGenBuffers(1, pEBO);
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+    glBindVertexArray(*pVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, *pVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *pEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    int stride_size = 8;
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride_size * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride_size * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride_size * sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
+}
+
+void load_image_bind_textures(unsigned int *textures)
+{
+
+	stbi_set_flip_vertically_on_load(1); 
+	char *images[2] = {"res/wall.jpg", "res/awesomeface.png"};
+	for(int i=0; i<2 ; i++) {
+		glGenTextures(1, textures+i);
+		glBindTexture(GL_TEXTURE_2D, textures[i]);
+
+		set_tex_parameters();
+		int width, height, nrChannels;
+		unsigned char * data = stbi_load(images[i], &width, &height, &nrChannels, 0);
+		if(data) 
+		{
+			if(i==0) 
+			{
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			}
+			else 
+			{
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			}
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
+		else 
+		{
+			printf("Failed to load texture\n");
+		}
+		stbi_image_free(data);
+	}
+}
+
+int 
+main()
+{
+	//init glfw
+	glfwInit();
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+#endif
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
+
+	//create a glfwwindow object that we can use for glfw`s functions
+	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "LearnOpenGL", NULL, NULL);
+	glfwMakeContextCurrent(window);
+
+
+	//set the require callback functions
+	glfwSetKeyCallback(window, key_callback);
+
+	glewExperimental = GL_TRUE;
+	glewInit();
+
+	//viewport
+	int viewPortWidth, viewPortHeight;
+	glfwGetFramebufferSize(window, &viewPortWidth, &viewPortHeight);
+	glViewport(0, 0, viewPortWidth, viewPortHeight);
+
+	// build and compile our shaders program
+	// Vertex shader 顶点着色器
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+	// check for compile time errors
+	GLint success;
+	GLchar infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		printf("ERROR:shader: vertex compile failed:%s\n", infoLog);
+	}
+
+    // Fragment shader
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+    // Check for compile time errors
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED %s \n", infoLog);
+    }
+    // Link shaders
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    // Check for linking errors
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        printf("ERROR::SHADER::PROGRAM::LINKING_FAILED %s \n", infoLog);
+    }
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+
+
+    GLuint VBO, VAO, EBO;
+    bind_vetex_attributes(&VAO, &VBO, &EBO);
+
+	int textures_len = 2;
+	unsigned int textures[2] = {0, 0};
+	load_image_bind_textures(textures);
+
+	glUseProgram(shaderProgram);
+
+	glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+	glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
+
+	//--TODO
+	kmMat4 trans;
+	kmMat4Translation(&trans, 0.5, -0.5, 0.0);
+	kmMat4RotationZ(&trans, 90.0f * M_PI / 180.0f);
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &trans.mat[0]);
+//	trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // Game loop
+    while (!glfwWindowShouldClose(window))
+    {
+        // Render
+        // Clear the colorbuffer
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+		for(int i=0; i<textures_len; i++) 
+		{
+			//bind texture
+			glActiveTexture(GL_TEXTURE0+i);
+			glBindTexture(GL_TEXTURE_2D, textures[i]);
+		}
+
+        glUseProgram(shaderProgram);
+		glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+		glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
+		//rotate
+		kmMat4RotationZ(&trans, (glfwGetTime()*30) * M_PI/180.f);
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &trans.mat[0]);
+
+        glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // Swap the screen buffers
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+
+    }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    // Terminate GLFW, clearing any resources allocated by GLFW.
+    glfwTerminate();
+    return 0;
+}
+
+// Is called whenever a key is pressed/released via GLFW
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+}
+

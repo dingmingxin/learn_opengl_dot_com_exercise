@@ -64,3 +64,6 @@ target_link_libraries(004_texture_2 ${LINK_LIBS})
 
 add_executable(005_transform_1 ${HELLO_SRC_DIR}/005_transform_1.c)
 target_link_libraries(005_transform_1 ${LINK_LIBS} kazmath)
+
+add_executable(005_transform_2 ${HELLO_SRC_DIR}/005_transform_2.c)
+target_link_libraries(005_transform_2 ${LINK_LIBS} kazmath)
