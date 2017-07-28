@@ -76,3 +76,6 @@ target_link_libraries(006_coordinate_2 ${LINK_LIBS} kazmath)
 
 add_executable(006_coordinate_3 ${HELLO_SRC_DIR}/006_coordinate_3.c)
 target_link_libraries(006_coordinate_3 ${LINK_LIBS} kazmath)
+
+add_executable(006_coordinate_4 ${HELLO_SRC_DIR}/006_coordinate_4.c)
+target_link_libraries(006_coordinate_4 ${LINK_LIBS} kazmath)
