@@ -31,7 +31,7 @@ const GLchar* vertexShaderSource = "#version 330 core\n"
 	"{\n"
 	"gl_Position = transform * vec4(aPos, 1.0); \n"
 	"ourColor = aColor;\n"
-	"TexCoord = vec2(aTexCoord.x, 1.0-aTexCoord.y);\n"
+	"TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
 	"}\0";
 
 const GLchar* fragmentShaderSource = "#version 330 core\n"
@@ -209,11 +209,6 @@ main()
 	glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
 
 	//--TODO
-	kmMat4 trans;
-	kmMat4Translation(&trans, 0.0, 0.0, 0.0);
-	kmMat4RotationZ(&trans, 100.0f * M_PI / 180.0f);
-	kmMat4Scaling(&trans, 0.5, 0.5, 0.5);
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &trans.mat[0]);
 
     // Game loop
     while (!glfwWindowShouldClose(window))
@@ -231,8 +226,12 @@ main()
 		}
 
         glUseProgram(shaderProgram);
-		glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
-		glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
+
+		kmMat4 trans;
+		kmMat4Translation(&trans, 0.0, 0.0, 0.0);
+		kmMat4RotationZ(&trans, 100.0f * M_PI / 180.0f);
+		kmMat4Scaling(&trans, 0.5, 0.5, 0.5);
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &trans.mat[0]);
 
         glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
