@@ -8,6 +8,7 @@
 #include "kazmath/kazmath/vec3.h"
 #include "kazmath/kazmath/vec4.h"
 #include "kazmath/kazmath/mat4.h"
+#include "kazmath/kazmath/utility.h"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -31,7 +32,7 @@ const GLchar* vertexShaderSource = "#version 330 core\n"
 	"{\n"
 	"gl_Position = transform * vec4(aPos, 1.0); \n"
 	"ourColor = aColor;\n"
-	"TexCoord = vec2(aTexCoord.x, 1.0-aTexCoord.y);\n"
+	"TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
 	"}\0";
 
 const GLchar* fragmentShaderSource = "#version 330 core\n"
@@ -208,12 +209,6 @@ main()
 	glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
 	glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
 
-	//--TODO
-	kmMat4 trans;
-	kmMat4Translation(&trans, 0.5, -0.5, 0.0);
-	kmMat4RotationZ(&trans, 90.0f * M_PI / 180.0f);
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &trans.mat[0]);
-//	trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
     // Game loop
     while (!glfwWindowShouldClose(window))
@@ -231,11 +226,15 @@ main()
 		}
 
         glUseProgram(shaderProgram);
-		glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
-		glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
 		//rotate
-		kmMat4RotationZ(&trans, (glfwGetTime()*30) * M_PI/180.f);
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &trans.mat[0]);
+		kmMat4 model;
+		kmMat4Identity(&model);
+		kmMat4 tmp; //变换矩阵
+		kmMat4Translation(&tmp, 0.5f, -0.5f, 0.0);
+		kmMat4Multiply(&model, &model, &tmp);
+		kmMat4RotationZ(&tmp, (glfwGetTime()*kmDegreesToRadians(30)));
+		kmMat4Multiply(&model, &model, &tmp);
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &model.mat[0]);
 
         glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
