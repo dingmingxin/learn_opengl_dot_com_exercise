@@ -8,6 +8,7 @@
 #include "kazmath/kazmath/vec3.h"
 #include "kazmath/kazmath/vec4.h"
 #include "kazmath/kazmath/mat4.h"
+#include "kazmath/kazmath/utility.h"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -227,11 +228,14 @@ main()
 
         glUseProgram(shaderProgram);
 
-		kmMat4 trans;
-		kmMat4Translation(&trans, 0.0, 0.0, 0.0);
-		kmMat4RotationZ(&trans, 100.0f * M_PI / 180.0f);
-		kmMat4Scaling(&trans, 0.5, 0.5, 0.5);
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &trans.mat[0]);
+		kmMat4 model, tmp;
+		kmMat4Identity(&model);
+		kmMat4Translation(&tmp, 0.0, 0.0, 0.0);
+		kmMat4RotationZ(&tmp, kmDegreesToRadians(90));
+		kmMat4Multiply(&model, &model, &tmp);
+		kmMat4Scaling(&tmp, 0.5, 0.5, 0.5);
+		kmMat4Multiply(&model, &model, &tmp);
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &model.mat[0]);
 
         glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
