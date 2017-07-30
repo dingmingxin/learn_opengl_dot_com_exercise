@@ -9,6 +9,7 @@
 #include "kazmath/kazmath/vec4.h"
 #include "kazmath/kazmath/mat4.h"
 #include "kazmath/kazmath/GL/matrix.h"
+#include "kazmath/kazmath/utility.h"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -18,6 +19,7 @@
 const GLuint WIN_WIDTH = 800, WIN_HEIGHT = 600;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 //shaders
 
@@ -168,6 +170,8 @@ main()
 	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "LearnOpenGL", NULL, NULL);
 	glfwMakeContextCurrent(window);
 
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
 
 	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
@@ -176,10 +180,10 @@ main()
 	glewInit();
 
 	//viewport
-	int viewPortWidth, viewPortHeight;
-	glfwGetFramebufferSize(window, &viewPortWidth, &viewPortHeight);
-	glViewport(0, 0, viewPortWidth, viewPortHeight);
-
+//	int viewPortWidth, viewPortHeight;
+//	glfwGetFramebufferSize(window, &viewPortWidth, &viewPortHeight);
+//	glViewport(0, 0, viewPortWidth, viewPortHeight);
+//
 	// build and compile our shaders program
 	// Vertex shader 顶点着色器
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -238,12 +242,12 @@ main()
 		{2.0f,  5.0f, -15.0f}, 
 		{1.5f, -2.2f, -2.5f},  
 		{3.8f, -2.0f, -12.3f},  
-		{2.4f, -0.4f, -3.5f},  
-		{1.7f,  3.0f, -7.5f},  
-		{1.3f, -2.0f, -2.5f},  
-		{1.5f,  2.0f, -2.5f}, 
+		{-0.4f, -0.4f, -3.5f},  
+		{-1.7f,  3.0f, -7.5f},  
+		{-1.3f, -2.0f, -2.5f},  
+		{-1.5f,  2.0f, -2.5f}, 
 		{1.5f,  0.2f, -1.5f}, 
-		{1.3f,  1.0f, -1.5f}  
+		{-1.3f,  1.0f, -1.5f}  
 	};
 //	kmVec3 cubes[10];
 //	for(int i=0; i<10; i++) 
@@ -277,17 +281,20 @@ main()
 		kmMat4 projection;
 		kmMat4PerspectiveProjection(&projection, 45, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
 
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, &view.mat[0]);
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection.mat[0]);
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, &view.mat[0]);
 
         glBindVertexArray(VAO);
 		for(unsigned int i = 0; i < 10; i++)
 		{
 
-			float angle = 20.0f * i;
+			float angle = kmDegreesToRadians(20.0f * i);
 			kmMat4 model, tmp;
 			kmMat4Identity(&model);
-			kmMat4Translation(&model, cubePositions[i][0], cubePositions[i][1], cubePositions[i][2]);
+			kmMat4Translation(&tmp, cubePositions[i][0], cubePositions[i][1], cubePositions[i][2]);
+			kmMat4Multiply(&model, &model, &tmp);
+
+			kmMat4Identity(&tmp);
 			kmMat4RotationYawPitchRoll(&tmp, 1.0f*angle, 0.3f*angle, 0.5f*angle);
 			kmMat4Multiply(&model, &model, &tmp);
 
@@ -318,3 +325,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and 
+    // height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
+}
