@@ -288,14 +288,14 @@ main()
 		for(unsigned int i = 0; i < 10; i++)
 		{
 
-			float angle = kmDegreesToRadians(20.0f * i);
+			float angle = kmDegreesToRadians(10.0f * (i+1) * glfwGetTime());
 			kmMat4 model, tmp;
 			kmMat4Identity(&model);
 			kmMat4Translation(&tmp, cubePositions[i][0], cubePositions[i][1], cubePositions[i][2]);
 			kmMat4Multiply(&model, &model, &tmp);
 
 			kmMat4Identity(&tmp);
-			kmMat4RotationYawPitchRoll(&tmp, 1.0f*angle, 0.3f*angle, 0.5f*angle);
+			kmMat4RotationYawPitchRoll(&tmp, 1.0f*angle, 0.6f*angle, 0.5f*angle);
 			kmMat4Multiply(&model, &model, &tmp);
 
 			glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &model.mat[0]);
