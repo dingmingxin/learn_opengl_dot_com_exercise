@@ -85,3 +85,6 @@ target_link_libraries(007_camera_1 ${LINK_LIBS} kazmath)
 
 add_executable(007_camera_2 ${HELLO_SRC_DIR}/007_camera_2.c)
 target_link_libraries(007_camera_2 ${LINK_LIBS} kazmath)
+
+add_executable(007_camera_3 ${HELLO_SRC_DIR}/007_camera_3.c)
+target_link_libraries(007_camera_3 ${LINK_LIBS} kazmath)
