@@ -279,10 +279,10 @@ main()
 		GLfloat radius = 10.0f;
 		GLfloat camX = sin(glfwGetTime()) * radius;
 		GLfloat camZ = cos(glfwGetTime()) * radius;
-		kmVec3 pEye = {camX, 0, camZ};
-		kmVec3 pCtrl = {0, 0, 0};
-		kmVec3 pUp = {0, 1.0f, 0};
-		kmMat4LookAt(&view, &pEye, &pCtrl, &pUp);
+		kmVec3 cameraPos = {camX, 0, camZ};
+		kmVec3 cameraFront = {0, 0, 0};
+		kmVec3 cameraUp = {0, 1.0f, 0};
+		kmMat4LookAt(&view, &cameraPos, &cameraFront, &cameraUp);
 
 		kmMat4 projection;
 		kmMat4PerspectiveProjection(&projection, 45, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
