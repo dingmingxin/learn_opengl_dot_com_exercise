@@ -23,6 +23,9 @@ kmVec3 cameraPos = {0.0f, 0.0f, 3.0f};
 kmVec3 cameraFront = {0, 0, -1.0f};
 kmVec3 cameraUp	= {0.0f, 1.0f, 0.0f};
 
+float deltaTime = 0.0f; // 当前帧与上一帧的时间差
+float lastFrame = 0.0f; // 上一帧的时间
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -270,6 +273,11 @@ main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
+        //计算时间差
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		for(int i=0; i<textures_len; i++) 
 		{
 			//bind texture
@@ -326,7 +334,7 @@ main()
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-	float cameraSpeed = 0.2f;
+	float cameraSpeed = 2.5f * deltaTime;
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
@@ -349,7 +357,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     	kmVec3Cross(&tmp, &cameraFront, &cameraUp);
     	kmVec3Normalize(&tmp, &tmp);
     	kmVec3Scale(&tmp, &tmp, -cameraSpeed);
+//    	printf("A : %f %f %f\n", tmp.x, tmp.y, tmp.z);
     	kmVec3Add(&cameraPos, &cameraPos, &tmp);
+    	// 叉乘, 标准化, scale, add
+//		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) 
 	{
