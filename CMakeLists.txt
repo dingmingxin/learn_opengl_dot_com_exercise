@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.3)
 
 project (t1)
 
@@ -35,56 +35,40 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	if(GLFW_FOUND)
 		list(APPEND LINK_LIBS ${GLFW_LIBRARIES})
 	endif()
-	message(${LINK_LIBS})
 endif()
 
-add_executable(001_hello_window ${HELLO_SRC_DIR}/001_hello_window.c)
-target_link_libraries(001_hello_window ${LINK_LIBS})
+add_custom_target(BUILD_KAZMATH_LIB ALL)
 
-add_executable(002_triangle_1 ${HELLO_SRC_DIR}/002_triangle_1.c)
-target_link_libraries(002_triangle_1 ${LINK_LIBS})
+add_custom_command(TARGET BUILD_KAZMATH_LIB
+	PRE_BUILD 
+	COMMAND echo "${CMAKE_CURRENT_SOURCE_DIR}"
+	COMMENT "This command will be executed before building target BUILD_KAZMATH_LIB"
 
-add_executable(002_triangle_2 ${HELLO_SRC_DIR}/002_triangle_2.c)
-target_link_libraries(002_triangle_2 ${LINK_LIBS})
+	COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} submodule update --init
+	COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/src/kazmath && cmake . && make kazmath
+	)
 
-add_executable(003_shader_1 ${HELLO_SRC_DIR}/003_shader_1.c)
-target_link_libraries(003_shader_1 ${LINK_LIBS})
+set(LEARN_BUILD_TARGETS 
+	001_hello_window 
+	002_triangle_1 002_triangle_2 
+	003_shader_1 003_shader_2 003_shader_3 
+	004_texture_1 004_texture_2
+	005_transform_1 005_transform_2
+	006_coordinate_1 006_coordinate_2 006_coordinate_3 006_coordinate_4
+	007_camera_1 007_camera_2 007_camera_3)
 
-add_executable(003_shader_2 ${HELLO_SRC_DIR}/003_shader_2.c)
-target_link_libraries(003_shader_2 ${LINK_LIBS})
+set(NEED_KAZMATH_TARGETS "005" "006" "007")
 
-add_executable(003_shader_3 ${HELLO_SRC_DIR}/003_shader_3.c)
-target_link_libraries(003_shader_3 ${LINK_LIBS})
+foreach(target ${LEARN_BUILD_TARGETS})
+	add_executable(${target} ${HELLO_SRC_DIR}/${target}.c)
+	string(REGEX MATCH "([0-9]+)" target_index ${target})
+	if(CMAKE_MATCH_1) 
+		list(APPEND ${target_index}_extra_lib ${LINK_LIBS})
+		if(${target_index} IN_LIST NEED_KAZMATH_TARGETS)
+			list(APPEND ${target_index}_extra_lib "kazmath")
+			add_dependencies(${target} BUILD_KAZMATH_LIB)
+		endif()
+	endif()
+	target_link_libraries(${target} ${${target_index}_extra_lib})
+endforeach()
 
-add_executable(004_texture_1 ${HELLO_SRC_DIR}/004_texture_1.c)
-target_link_libraries(004_texture_1 ${LINK_LIBS})
-
-add_executable(004_texture_2 ${HELLO_SRC_DIR}/004_texture_2.c)
-target_link_libraries(004_texture_2 ${LINK_LIBS})
-
-add_executable(005_transform_1 ${HELLO_SRC_DIR}/005_transform_1.c)
-target_link_libraries(005_transform_1 ${LINK_LIBS} kazmath)
-
-add_executable(005_transform_2 ${HELLO_SRC_DIR}/005_transform_2.c)
-target_link_libraries(005_transform_2 ${LINK_LIBS} kazmath)
-
-add_executable(006_coordinate_1 ${HELLO_SRC_DIR}/006_coordinate_1.c)
-target_link_libraries(006_coordinate_1 ${LINK_LIBS} kazmath)
-
-add_executable(006_coordinate_2 ${HELLO_SRC_DIR}/006_coordinate_2.c)
-target_link_libraries(006_coordinate_2 ${LINK_LIBS} kazmath)
-
-add_executable(006_coordinate_3 ${HELLO_SRC_DIR}/006_coordinate_3.c)
-target_link_libraries(006_coordinate_3 ${LINK_LIBS} kazmath)
-
-add_executable(006_coordinate_4 ${HELLO_SRC_DIR}/006_coordinate_4.c)
-target_link_libraries(006_coordinate_4 ${LINK_LIBS} kazmath)
-
-add_executable(007_camera_1 ${HELLO_SRC_DIR}/007_camera_1.c)
-target_link_libraries(007_camera_1 ${LINK_LIBS} kazmath)
-
-add_executable(007_camera_2 ${HELLO_SRC_DIR}/007_camera_2.c)
-target_link_libraries(007_camera_2 ${LINK_LIBS} kazmath)
-
-add_executable(007_camera_3 ${HELLO_SRC_DIR}/007_camera_3.c)
-target_link_libraries(007_camera_3 ${LINK_LIBS} kazmath)
