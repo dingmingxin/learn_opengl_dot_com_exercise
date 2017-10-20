@@ -159,6 +159,9 @@ set(7.in_practice
 	1.debugging
 	# 2.text_rendering
 )
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
+
 # then create a project file per tutorial
 foreach(CHAPTER ${CHAPTERS})
     foreach(DEMO ${${CHAPTER}})
