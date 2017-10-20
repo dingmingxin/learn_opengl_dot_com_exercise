@@ -28,27 +28,22 @@
 #include "shader.h"
 
 const GLuint WIN_WIDTH = 800, WIN_HEIGHT = 600;
+const int SHADER_SOURCE_SIZE = 1024;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
 
-const GLchar* vertexShaderSource = "#version 330 core\n"
-	"layout (location = 0) in vec3 position; \n"
-	"layout (location = 1) in vec3 color; \n"
-	"out vec3 ourColor; \n"
-	"void main()\n"
-	"{\n"
-	"gl_Position = vec4(position.x, position.y, position.z, 1.0); \n"
-	"ourColor = color;\n"
-	"}\0";
-
-const GLchar* fragmentShaderSource = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"in vec3 ourColor;\n"
-	"void main()\n"
-	"{\n"
-	"FragColor = vec4(ourColor, 1.0);\n"
-	"}\n\0";
+static void 
+shader_read(const char *filename, char *buf, int sz) {
+	FILE *fp = NULL;
+	fp = fopen(filename, "r");
+	if (!fp) {
+		printf("open file error\n");
+		return;
+	}
+	fread(buf, sizeof *buf, sz, fp);
+	fclose(fp);
+}
 
 int 
 main()
@@ -65,12 +60,10 @@ main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 
-	//create a glfwwindow object that we can use for glfw`s functions
 	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "LearnOpenGL", NULL, NULL);
 	glfwMakeContextCurrent(window);
 
 
-	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
 
 	glewExperimental = GL_TRUE;
@@ -82,9 +75,14 @@ main()
 	glViewport(0, 0, viewPortWidth, viewPortHeight);
 
 	struct shader shader;
+	char fragmentShaderSource[SHADER_SOURCE_SIZE];
+	char vertexShaderSource[SHADER_SOURCE_SIZE];
+
+	shader_read("3.3.shader.fs", fragmentShaderSource, SHADER_SOURCE_SIZE);
+	shader_read("3.3.shader.vs", vertexShaderSource, SHADER_SOURCE_SIZE);
+
 	shader_create(&shader, fragmentShaderSource, vertexShaderSource);
 
-    // Set up vertex data (and buffer(s)) and attribute pointers
     GLfloat vertices[] = {
     	//position
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // Left  
@@ -128,12 +126,8 @@ main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         float timeValue = glfwGetTime();
-        float greenValue = (sin(timeValue)/2.0f) + 0.5f;
 
-		int loc = shader_uniform_location(&shader, "ourColor");
-        ourColor[1] = greenValue;
         shader_use(&shader);
-		shader_set_uniform(&shader, loc, UNIFORM_FLOAT3, ourColor);
 
         glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
