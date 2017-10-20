@@ -20,7 +20,7 @@ void shader_create(struct shader *s, const char *fs, const char *vs);
 void shader_use(const struct shader *s);
 void shader_uniform_property(struct shader *s, int loc, enum UNIFORM_FORMAT format, const float *v);
 int shader_uniform_location(struct shader *s, const char *name);
-void shader_source(char *filename, char *buf);
+void shader_source(char *filename, char *buf, int sz);
 
 
 #endif   /* ----- #ifndef SHADER_INC  ----- */

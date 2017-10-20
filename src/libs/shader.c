@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -29,6 +30,7 @@ void
 shader_use(const struct shader *s) {
 	glUseProgram(s->id);
 }
+
 
 void
 shader_create(struct shader *s, const char *fs_source, const char *vs_source) {
@@ -105,5 +107,20 @@ shader_uniform_location(struct shader *s, const char *name) {
 
 
 void 
-shader_source(char *filename, char *buf) {
+shader_source(char *name, char *buf, int sz) {
+	FILE *fp = NULL;
+#ifdef BIN_PATH
+	char fname[1024] = "";
+	strcat(fname, BIN_PATH);
+	strcat(fname, name);
+	fp = fopen(fname, "r");
+#else
+	fp = fopen(name, "r");
+#endif 
+	if (!fp) {
+		printf("open file error\n");
+		return;
+	}
+	fread(buf, sizeof *buf, sz, fp);
+	fclose(fp);
 }

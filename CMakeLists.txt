@@ -188,7 +188,7 @@ foreach(CHAPTER ${CHAPTERS})
 				add_executable(${NAME} ${SOURCE})
 				add_dependencies(${NAME} BUILD_KAZMATH_LIB)
 				target_link_libraries(${NAME} ${LINK_LIBS})
-				target_compile_definitions(${NAME} PRIVATE BIN_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}/${DEMO}")
+				target_compile_definitions(${NAME} PRIVATE BIN_PATH="${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}/")
 				set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}")
 				# copy shader files to build directory
 				file(GLOB SHADERS 

@@ -4,6 +4,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "shader.h"
+#define SHADER_SOURCE_SIZE 1024
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 
@@ -107,45 +110,14 @@ main()
 	glfwGetFramebufferSize(window, &viewPortWidth, &viewPortHeight);
 	glViewport(0, 0, viewPortWidth, viewPortHeight);
 
-	// build and compile our shaders program
-	// Vertex shader 顶点着色器
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	// check for compile time errors
-	GLint success;
-	GLchar infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		printf("ERROR:shader: vertex compile failed:%s\n", infoLog);
-	}
+	struct shader shader;
+	char fragmentShaderSource[SHADER_SOURCE_SIZE];
+	char vertexShaderSource[SHADER_SOURCE_SIZE];
 
-    // Fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // Check for compile time errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED %s \n", infoLog);
-    }
-    // Link shaders
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // Check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        printf("ERROR::SHADER::PROGRAM::LINKING_FAILED %s \n", infoLog);
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+	shader_source("4.1.shader.fs", fragmentShaderSource, SHADER_SOURCE_SIZE);
+	shader_source("4.1.shader.vs", vertexShaderSource, SHADER_SOURCE_SIZE);
 
+	shader_create(&shader, fragmentShaderSource, vertexShaderSource);
 
     unsigned int texture;
     glGenTextures(1, &texture);
@@ -173,7 +145,7 @@ main()
 		//bind texture
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glUseProgram(shaderProgram);
+		shader_use(&shader);
 
         glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
