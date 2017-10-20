@@ -161,6 +161,12 @@ set(7.in_practice
 )
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/libs")
+
+set(LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libs")
+
+file(GLOB SHADER_CLASS_SOURCE "${LIB_SRC}/shader.h" "${LIB_SRC}/shader.c")
+list(APPEND 3.3.shaders_class_extra_src ${SHADER_CLASS_SOURCE})
 
 # then create a project file per tutorial
 foreach(CHAPTER ${CHAPTERS})
@@ -172,6 +178,9 @@ foreach(CHAPTER ${CHAPTERS})
 				"${SRC_DIR}/*.c"
 				)
 			set(NAME "${DEMO}")
+			if(${DEMO}_extra_src)
+				list(APPEND SOURCE ${${DEMO}_extra_src})
+			endif()
 			list(LENGTH SOURCE SOURCE_FILES_LEN)
 			if(${SOURCE_FILES_LEN} GREATER 0)
 				add_executable(${NAME} ${SOURCE})
