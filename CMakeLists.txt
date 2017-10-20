@@ -167,6 +167,8 @@ set(LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libs")
 
 file(GLOB SHADER_CLASS_SOURCE "${LIB_SRC}/shader.h" "${LIB_SRC}/shader.c")
 list(APPEND 3.3.shaders_class_extra_src ${SHADER_CLASS_SOURCE})
+list(APPEND 4.1.textures_extra_src ${SHADER_CLASS_SOURCE})
+
 
 # then create a project file per tutorial
 foreach(CHAPTER ${CHAPTERS})
@@ -186,6 +188,7 @@ foreach(CHAPTER ${CHAPTERS})
 				add_executable(${NAME} ${SOURCE})
 				add_dependencies(${NAME} BUILD_KAZMATH_LIB)
 				target_link_libraries(${NAME} ${LINK_LIBS})
+				target_compile_definitions(${NAME} PRIVATE BIN_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}/${DEMO}")
 				set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}")
 				# copy shader files to build directory
 				file(GLOB SHADERS 

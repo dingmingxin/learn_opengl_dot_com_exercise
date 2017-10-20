@@ -102,3 +102,8 @@ shader_uniform_location(struct shader *s, const char *name) {
 	int loc = glGetUniformLocation(s->id, name);
 	return loc;
 }
+
+
+void 
+shader_source(char *filename, char *buf) {
+}
