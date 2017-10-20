@@ -33,6 +33,7 @@ const int SHADER_SOURCE_SIZE = 1024;
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
 
+//using ./3.3.shaders_class to see result，否则会读取文件失败
 static void 
 shader_read(const char *filename, char *buf, int sz) {
 	FILE *fp = NULL;
