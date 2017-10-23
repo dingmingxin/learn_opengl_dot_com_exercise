@@ -89,7 +89,7 @@ shader_set_uniform(struct shader *s, int loc, enum UNIFORM_FORMAT format, const 
 			}
 		case UNIFORM_FLOAT44:
 			{
-				glUniformMatrix3fv(loc, 1, GL_FALSE, v);
+				glUniformMatrix4fv(loc, 1, GL_FALSE, v);
 				break;
 			}
 		default:

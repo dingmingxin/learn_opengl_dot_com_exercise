@@ -3,6 +3,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "shader.h"
+#define SHADER_SOURCE_SIZE 1024
 
 #include "kazmath/kazmath/vec2.h"
 #include "kazmath/kazmath/vec3.h"
@@ -19,32 +21,7 @@ const GLuint WIN_WIDTH = 800, WIN_HEIGHT = 600;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
-//shaders
 
-const GLchar* vertexShaderSource = "#version 330 core\n"
-	"layout (location = 0) in vec3 aPos; \n"
-	"layout (location = 1) in vec3 aColor; \n"
-	"layout (location = 2) in vec2 aTexCoord; \n"
-	"out vec3 ourColor; \n"
-	"out vec2 TexCoord; \n"
-	"uniform mat4 transform; \n"
-	"void main()\n"
-	"{\n"
-	"gl_Position = transform * vec4(aPos, 1.0); \n"
-	"ourColor = aColor;\n"
-	"TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
-	"}\0";
-
-const GLchar* fragmentShaderSource = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"in vec3 ourColor;\n"
-	"in vec2 TexCoord;\n"
-	"uniform sampler2D texture1;\n"
-	"uniform sampler2D texture2;\n"
-	"void main()\n"
-	"{\n"
-	"FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.3);\n" //get fancy colors on texture
-	"}\n\0";
 
 void set_tex_parameters()
 {
@@ -156,45 +133,15 @@ main()
 	glfwGetFramebufferSize(window, &viewPortWidth, &viewPortHeight);
 	glViewport(0, 0, viewPortWidth, viewPortHeight);
 
-	// build and compile our shaders program
-	// Vertex shader 顶点着色器
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	// check for compile time errors
-	GLint success;
-	GLchar infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		printf("ERROR:shader: vertex compile failed:%s\n", infoLog);
-	}
 
-    // Fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // Check for compile time errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED %s \n", infoLog);
-    }
-    // Link shaders
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // Check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        printf("ERROR::SHADER::PROGRAM::LINKING_FAILED %s \n", infoLog);
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+	struct shader shader;
+	char fragmentShaderSource[SHADER_SOURCE_SIZE];
+	char vertexShaderSource[SHADER_SOURCE_SIZE];
 
+	shader_source("5.1.shader.fs", fragmentShaderSource, SHADER_SOURCE_SIZE);
+	shader_source("5.1.shader.vs", vertexShaderSource, SHADER_SOURCE_SIZE);
+
+	shader_create(&shader, fragmentShaderSource, vertexShaderSource);
 
 
     GLuint VBO, VAO, EBO;
@@ -204,10 +151,6 @@ main()
 	unsigned int textures[2] = {0, 0};
 	load_image_bind_textures(textures);
 
-	glUseProgram(shaderProgram);
-
-	glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
-	glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
 
 	//--TODO
 
@@ -226,7 +169,7 @@ main()
 			glBindTexture(GL_TEXTURE_2D, textures[i]);
 		}
 
-        glUseProgram(shaderProgram);
+		shader_use(&shader);
 
 		kmMat4 model, tmp;
 		kmMat4Identity(&model);
@@ -235,7 +178,10 @@ main()
 		kmMat4Multiply(&model, &model, &tmp);
 		kmMat4Scaling(&tmp, 0.5, 0.5, 0.5);
 		kmMat4Multiply(&model, &model, &tmp);
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "transform"), 1, GL_FALSE, &model.mat[0]);
+
+		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, &model.mat[0]);
+		glUniform1i(glGetUniformLocation(shader.id, "texture1"), 0);
+		glUniform1i(glGetUniformLocation(shader.id, "texture2"), 1);
 
         glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
