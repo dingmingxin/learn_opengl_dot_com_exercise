@@ -166,12 +166,21 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/libs")
 set(LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libs")
 
 file(GLOB SHADER_CLASS_SOURCE "${LIB_SRC}/shader.h" "${LIB_SRC}/shader.c")
-list(APPEND 3.3.shaders_class_extra_src ${SHADER_CLASS_SOURCE})
-list(APPEND 4.1.textures_extra_src ${SHADER_CLASS_SOURCE})
-list(APPEND 4.2.textures_combined_extra_src ${SHADER_CLASS_SOURCE})
-list(APPEND 5.1.transformations_extra_src ${SHADER_CLASS_SOURCE})
-list(APPEND 5.2.transformations_exercise2_extra_src ${SHADER_CLASS_SOURCE})
-list(APPEND 6.1.coordinate_systems_extra_src ${SHADER_CLASS_SOURCE})
+
+list(APPEND NEED_SHADER_CLASS_SOURCE_LIST 
+	"3.3.shaders_class" 
+	"4.1.textures" 
+	"4.2.textures_combined"
+	"5.1.transformations"
+	"5.2.transformations_exercise2"
+	"6.1.coordinate_systems"
+	"6.2.coordinate_systems_depth"
+	"6.3.coordinate_systems_multiple"
+	)
+
+foreach(EXTRA_SOURCE ${NEED_SHADER_CLASS_SOURCE_LIST})
+	list(APPEND ${EXTRA_SOURCE}_extra_src ${SHADER_CLASS_SOURCE})
+endforeach()
 
 
 # then create a project file per tutorial
