@@ -62,11 +62,8 @@ void bind_vetex_attributes(GLuint *pVAO, GLuint *pVBO, GLuint *pEBO)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride_size * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride_size * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride_size * sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride_size * sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
-    glEnableVertexAttribArray(2);
 }
 
 void load_image_bind_textures(unsigned int *textures)
