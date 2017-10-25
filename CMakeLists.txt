@@ -170,6 +170,7 @@ list(APPEND 3.3.shaders_class_extra_src ${SHADER_CLASS_SOURCE})
 list(APPEND 4.1.textures_extra_src ${SHADER_CLASS_SOURCE})
 list(APPEND 4.2.textures_combined_extra_src ${SHADER_CLASS_SOURCE})
 list(APPEND 5.1.transformations_extra_src ${SHADER_CLASS_SOURCE})
+list(APPEND 5.2.transformations_exercise2_extra_src ${SHADER_CLASS_SOURCE})
 
 
 # then create a project file per tutorial
