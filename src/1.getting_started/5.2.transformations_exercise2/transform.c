@@ -171,7 +171,7 @@ main()
 
 		shader_use(&shader);
 
-		//rotate
+		//first container
 		kmMat4 model;
 		kmMat4Identity(&model);
 		kmMat4 tmp; //变换矩阵
@@ -179,11 +179,23 @@ main()
 		kmMat4Multiply(&model, &model, &tmp);
 		kmMat4RotationZ(&tmp, (glfwGetTime()*kmDegreesToRadians(30)));
 		kmMat4Multiply(&model, &model, &tmp);
-		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, &model.mat[0]);
+		unsigned int transformLoc = glGetUniformLocation(shader.id, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &model.mat[0]);
 
         glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+
+		//second container
+		kmMat4 model2, tmp2;
+		kmMat4Identity(&model2);
+		kmMat4Translation(&tmp2, -0.5f, 0.5f, 0.0f);
+		kmMat4Multiply(&model2, &model2, &tmp2);
+		float scaleAmount = sin(glfwGetTime());
+		kmMat4Scaling(&tmp2, scaleAmount, scaleAmount, scaleAmount);
+		kmMat4Multiply(&model2, &model2, &tmp2);
+
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &model2.mat[0]);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
