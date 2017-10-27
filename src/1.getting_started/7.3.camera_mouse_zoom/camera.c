@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -10,6 +11,11 @@
 #include "kazmath/kazmath/mat4.h"
 #include "kazmath/kazmath/GL/matrix.h"
 #include "kazmath/kazmath/utility.h"
+
+#include "shader.h"
+#define SHADER_SOURCE_SIZE 1024
+#define MAX_FOV 75.0f
+#define MIN_FOV 1.0f
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -25,34 +31,18 @@ kmVec3 cameraUp	= {0.0f, 1.0f, 0.0f};
 
 float deltaTime = 0.0f; // 当前帧与上一帧的时间差
 float lastFrame = 0.0f; // 上一帧的时间
+bool firstMouse = true;
+float yaw   = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch =  0.0f;
+float lastX =  800.0f / 2.0;
+float lastY =  600.0 / 2.0;
+float fov =  20.0f;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
-//shaders
-
-const GLchar* vertexShaderSource = "#version 330 core\n"
-	"layout (location = 0) in vec3 aPos; \n"
-	"layout (location = 1) in vec2 aTexCoord; \n"
-	"out vec2 TexCoord; \n"
-	"uniform mat4 model; \n"
-	"uniform mat4 view; \n"
-	"uniform mat4 projection; \n"
-	"void main()\n"
-	"{\n"
-	"gl_Position = projection * view * model * vec4(aPos, 1.0); \n"
-	"TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
-	"}\0";
-
-const GLchar* fragmentShaderSource = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"in vec2 TexCoord;\n"
-	"uniform sampler2D texture1;\n"
-	"uniform sampler2D texture2;\n"
-	"void main()\n"
-	"{\n"
-	"FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.3);\n" //get fancy colors on texture
-	"}\n\0";
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 void set_tex_parameters()
 {
@@ -179,6 +169,8 @@ main()
 	glfwMakeContextCurrent(window);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
 
 	//set the require callback functions
@@ -187,51 +179,12 @@ main()
 	glewExperimental = GL_TRUE;
 	glewInit();
 
-	//viewport
-//	int viewPortWidth, viewPortHeight;
-//	glfwGetFramebufferSize(window, &viewPortWidth, &viewPortHeight);
-//	glViewport(0, 0, viewPortWidth, viewPortHeight);
-//
-	// build and compile our shaders program
-	// Vertex shader 顶点着色器
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	// check for compile time errors
-	GLint success;
-	GLchar infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		printf("ERROR:shader: vertex compile failed:%s\n", infoLog);
-	}
-
-    // Fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // Check for compile time errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED %s \n", infoLog);
-    }
-    // Link shaders
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // Check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        printf("ERROR::SHADER::PROGRAM::LINKING_FAILED %s \n", infoLog);
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-
+	struct shader shader;
+	char fragmentShaderSource[SHADER_SOURCE_SIZE];
+	char vertexShaderSource[SHADER_SOURCE_SIZE];
+	shader_source("7.3.shader.fs", fragmentShaderSource, SHADER_SOURCE_SIZE);
+	shader_source("7.3.shader.vs", vertexShaderSource, SHADER_SOURCE_SIZE);
+	shader_create(&shader, fragmentShaderSource, vertexShaderSource);
 
     GLuint VBO, VAO;
     bind_vetex_attributes(&VAO, &VBO);
@@ -240,10 +193,9 @@ main()
 	unsigned int textures[2] = {0, 0};
 	load_image_bind_textures(textures);
 
-	glUseProgram(shaderProgram);
-
-	glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
-	glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
+	shader_use(&shader);
+	glUniform1i(glGetUniformLocation(shader.id, "texture1"), 0);
+	glUniform1i(glGetUniformLocation(shader.id, "texture2"), 1);
 
 	float cubePositions[10][3] = {
 		{0.0f,  0.0f,  0.0f}, 
@@ -279,17 +231,16 @@ main()
 			glBindTexture(GL_TEXTURE_2D, textures[i]);
 		}
 
-        glUseProgram(shaderProgram);
-
+		shader_use(&shader);
 
 		kmMat4 view;
 		kmMat4LookAt(&view, &cameraPos, &cameraFront, &cameraUp);
 
 		kmMat4 projection;
-		kmMat4PerspectiveProjection(&projection, 45, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
+		kmMat4PerspectiveProjection(&projection, fov, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
 
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection.mat[0]);
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, &view.mat[0]);
+		glUniformMatrix4fv(glGetUniformLocation(shader.id, "projection"), 1, GL_FALSE, &projection.mat[0]);
+		glUniformMatrix4fv(glGetUniformLocation(shader.id, "view"), 1, GL_FALSE, &view.mat[0]);
 
         glBindVertexArray(VAO);
 		for(unsigned int i = 0; i < 10; i++)
@@ -305,7 +256,7 @@ main()
 			kmMat4RotationYawPitchRoll(&tmp, 1.0f*angle, 0.6f*angle, 0.5f*angle);
 			kmMat4Multiply(&model, &model, &tmp);
 
-			glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &model.mat[0]);
+			glUniformMatrix4fv(glGetUniformLocation(shader.id, "model"), 1, GL_FALSE, &model.mat[0]);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
@@ -325,9 +276,52 @@ main()
     return 0;
 }
 
+void 
+mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f; // change this value to your liking
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	// make sure that when pitch is out of bounds, screen doesn't get flipped
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	cameraFront.x = cos(kmDegreesToRadians(yaw)) * cos(kmDegreesToRadians(pitch));
+	cameraFront.y = sin(kmDegreesToRadians(pitch));
+	cameraFront.z = sin(kmDegreesToRadians(yaw)) * cos(kmDegreesToRadians(pitch));
+	kmVec3Normalize(&cameraFront, &cameraFront);
+}
+
+void
+scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	if (fov >= MIN_FOV && fov <= MAX_FOV)
+		fov -= yoffset;
+    if (fov <= MIN_FOV)
+        fov = MIN_FOV;
+    if (fov >= MAX_FOV)
+        fov = MAX_FOV;
+}
+
 // Is called whenever a key is pressed/released via GLFW
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
+void 
+key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 	float cameraSpeed = 2.5f * deltaTime;
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -351,11 +345,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     	kmVec3Cross(&tmp, &cameraFront, &cameraUp);
     	kmVec3Normalize(&tmp, &tmp);
     	kmVec3Scale(&tmp, &tmp, -cameraSpeed);
-//    	printf("A : %f %f %f\n", tmp.x, tmp.y, tmp.z);
     	kmVec3Add(&cameraPos, &cameraPos, &tmp);
     	// 叉乘, 标准化, scale, add
-//		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
+
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) 
 	{
     	kmVec3 tmp;
