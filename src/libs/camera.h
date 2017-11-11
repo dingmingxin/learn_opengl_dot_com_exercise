@@ -45,7 +45,8 @@ struct camera {
 	float worldup[3];
 };
 
-struct camera * camera_init(struct camera *camera);
-void camera_move(CAMERA_MOVEMENT move_type, float offset)
+void camera_init(struct camera *camera);
+void camera_move(CAMERA_MOVEMENT move_type, float offset);
+void camera_view_matrix(struct camera *camera);
 
 #endif   /* ----- #ifndef camera_INC  ----- */
