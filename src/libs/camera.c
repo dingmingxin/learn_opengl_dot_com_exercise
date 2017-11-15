@@ -23,28 +23,80 @@
 #define CAMERA_PITCH -90.0f
 
 void
-camera_init(struct camera *camera, float *pos, float *up, float *front, float yaw, float pitch) {
-	camera->pos[0] = pos[0];
-	camera->pos[1] = pos[1];
-	camera->pos[2] = pos[2];
-
-	camera->up[0] = up[0];
-	camera->up[1] = up[1];
-	camera->up[2] = up[2];
-
-	camera->front[0] = front[0];
-	camera->front[1] = front[1];
-	camera->front[2] = front[2];
+camera_init(struct camera *camera, kmVec3 pos, kmVec3 up, kmVec3 front, float yaw, float pitch) {
+	camera->pos = pos;
+	camera->up = up;
+	camera->front = front;
 
 	camera->yaw = yaw;
 	camera->pitch = pitch;
 }
 
-void
-camera_move(CAMERA_MOVEMENT move, float offset) {
-
+static void 
+camera_update_pos(struct camera *camera, kmVec3 *offset) {
+	kmVec3 pos = camera->pos;
+	kmVec3Add(&pos, &pos, offset);
 }
 
 void
-camera_view_matrix(struct camera *camera) {
+camera_move(struct camera *camera, enum CAMERA_MOVEMENT movement, float offset) {
+
+	kmVec3 tmp;
+	kmVec3 front = camera->front;
+	kmVec3 pos = camera->pos;
+	kmVec3 up = camera->up;
+
+	switch(movement) {
+		case CM_BACKWARD: {
+							 kmVec3Scale(&tmp, &front, -offset);
+							 camera_update_pos(camera, &tmp);
+						  }
+			break;
+		case CM_FORWARD: {
+							 kmVec3Scale(&tmp, &front, offset);
+							 camera_update_pos(camera, &tmp);
+						 }
+			break;
+		case CM_LEFT: {
+						  kmVec3Cross(&tmp, &front, &up);
+						  kmVec3Normalize(&tmp, &tmp);
+						  kmVec3Scale(&tmp, &tmp, -offset);
+						  camera_update_pos(camera, &tmp);
+					  }
+			break;
+		case CM_RIGHT: {
+						  kmVec3Cross(&tmp, &front, &up);
+						  kmVec3Normalize(&tmp, &tmp);
+						  kmVec3Scale(&tmp, &tmp, offset);
+						  camera_update_pos(camera, &tmp);
+					   }
+			break;
+		default:
+			break;
+	}
 }
+
+void
+camera_yaw(struct camera *camera, float new_value) {
+	camera->yaw = new_value;
+}
+
+void 
+camera_pitch(struct camera *camera, float new_value) {
+	camera->pitch = new_value;
+}
+
+void
+camera_update_angle(struct camera *camera) {
+	kmVec3 front = camera->front;
+	front.x = cos(kmDegreesToRadians(camera->yaw)) * cos(kmDegreesToRadians(camera->pitch));
+	front.y = sin(kmDegreesToRadians(camera->pitch));
+	front.z = sin(kmDegreesToRadians(camera->yaw)) * cos(kmDegreesToRadians(camera->pitch));
+	kmVec3Normalize(&front, &front);
+}
+
+void
+camera_view_matrix(struct camera *camera, kmMat4 *view) {
+	kmMat4LookAt(view, &camera->pos, &camera->front, &camera->up);
+}
+

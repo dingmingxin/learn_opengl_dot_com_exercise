@@ -166,6 +166,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/libs")
 set(LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libs")
 
 file(GLOB SHADER_CLASS_SOURCE "${LIB_SRC}/shader.h" "${LIB_SRC}/shader.c")
+file(GLOB CAMERA_CLASS_SOURCE "${LIB_SRC}/camera.h" "${LIB_SRC}/camera.c")
 
 list(APPEND NEED_SHADER_CLASS_SOURCE_LIST 
 	"3.3.shaders_class" 
@@ -179,10 +180,16 @@ list(APPEND NEED_SHADER_CLASS_SOURCE_LIST
 	"7.1.camera_circle"
 	"7.2.camera_keyboard_dt"
 	"7.3.camera_mouse_zoom"
+	"7.4.camera_class"
 	)
+list(APPEND NEED_CAMERA_CLASS_SOURCE_LIST "7.4.camera_class")
 
 foreach(EXTRA_SOURCE ${NEED_SHADER_CLASS_SOURCE_LIST})
 	list(APPEND ${EXTRA_SOURCE}_extra_src ${SHADER_CLASS_SOURCE})
+endforeach()
+
+foreach(EXTRA_SOURCE ${NEED_CAMERA_CLASS_SOURCE_LIST})
+	list(APPEND ${EXTRA_SOURCE}_extra_src ${CAMERA_CLASS_SOURCE})
 endforeach()
 
 
