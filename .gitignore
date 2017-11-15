@@ -5,3 +5,7 @@ CMakeFiles/
 bin/
 .DS_Store
 *.swp
+GPATH
+GTAGS
+GRTAGS
+src/.gtags.files
