@@ -8,4 +8,4 @@ bin/
 GPATH
 GTAGS
 GRTAGS
-src/.gtags.files
+.gtags.files

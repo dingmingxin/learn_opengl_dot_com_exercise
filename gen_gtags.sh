@@ -23,15 +23,11 @@ TAGSYSTEM_ROOT=$HOME/dotfiles/config_tagsystem
 GTAGS_CONF_FILE=$TAGSYSTEM_ROOT/gtags.conf
 # CTAGS_CONF=$TAGSYSTEM_ROOT/ctags_lua.cnf
 
+current_dir=$(dirname $0)
 source_root=$(dirname $0)/src
 
-tagfile=$source_root/GTAGS
-filelist=$source_root/.gtags.files
+filelist=$current_dir/.gtags.files
 
-
-if [[ -f $tagfile ]]; then
-	gtags
-fi
 
 echo 'create gtags.files ... '
 
