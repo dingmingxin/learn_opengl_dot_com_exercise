@@ -88,7 +88,7 @@ set(1.getting_started
 )
 
 set(2.lighting
-	1.colors
+	1.1.colors
 	2.1.basic_lighting_diffuse
 	2.2.basic_lighting_specular
 	3.1.materials
@@ -181,8 +181,12 @@ list(APPEND NEED_SHADER_CLASS_SOURCE_LIST
 	"7.2.camera_keyboard_dt"
 	"7.3.camera_mouse_zoom"
 	"7.4.camera_class"
+	"1.1.colors"
 	)
-list(APPEND NEED_CAMERA_CLASS_SOURCE_LIST "7.4.camera_class")
+list(APPEND NEED_CAMERA_CLASS_SOURCE_LIST 
+	"7.4.camera_class"
+	"1.1.colors"
+	)
 
 foreach(EXTRA_SOURCE ${NEED_SHADER_CLASS_SOURCE_LIST})
 	list(APPEND ${EXTRA_SOURCE}_extra_src ${SHADER_CLASS_SOURCE})
