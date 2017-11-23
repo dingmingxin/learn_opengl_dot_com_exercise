@@ -21,7 +21,7 @@
 const GLuint WIN_WIDTH = 800, WIN_HEIGHT = 600;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-
+void focus_callback(GLFWwindow* window, int focused);
 
 void set_tex_parameters()
 {
@@ -150,6 +150,7 @@ main()
 
 	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetWindowFocusCallback(window, focus_callback);
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -237,5 +238,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
+void focus_callback(GLFWwindow* window, int focused)
+{
 }
 
