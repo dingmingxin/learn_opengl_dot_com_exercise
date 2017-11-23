@@ -98,6 +98,16 @@ main()
 	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
 
+
+	GLfloat vertices[] = {
+		-0.5f, 0.5f, 0.0f, 
+		-1.0f, -0.5f, 0.0f,
+		0.0f, -0.5f, 0.0f,
+		0.5f, 0.5f, 0.0f, 
+		1.0f, -0.5f, 0.0f,
+		0.0f, -0.5f, 0.0f,
+	}; 
+
 	glewExperimental = GL_TRUE;
 	glewInit();
 
@@ -110,7 +120,7 @@ main()
 
     GLuint VBO, lightVAO;
     glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO)
+    glBindVertexArray(lightVAO);
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -145,13 +155,6 @@ main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		for(int i=0; i<textures_len; i++) 
-		{
-			//bind texture
-			glActiveTexture(GL_TEXTURE0+i);
-			glBindTexture(GL_TEXTURE_2D, textures[i]);
-		}
-
 		shader_use(&shader);
 
 		kmMat4 view;
@@ -174,7 +177,7 @@ main()
 
     }
 
-    glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &lightVAO);
     glDeleteBuffers(1, &VBO);
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
