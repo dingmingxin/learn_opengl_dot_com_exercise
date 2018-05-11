@@ -9,6 +9,7 @@
 
 #include "shader.h"
 
+
 static bool
 check_compile_error(GLuint s)  {
 	GLint success;
@@ -31,6 +32,16 @@ shader_use(const struct shader *s) {
 	glUseProgram(s->id);
 }
 
+
+void
+shader_create_with_file(struct shader *s, const char *fs_file, const char *vs_file) {
+	int sz = 1024;
+	char fragmentShaderSource[1024];
+	char vertexShaderSource[1024];
+	shader_source(fs_file, fragmentShaderSource, sz);
+	shader_source(vs_file, vertexShaderSource, sz);
+	shader_create(s, fragmentShaderSource, vertexShaderSource);
+}
 
 void
 shader_create(struct shader *s, const char *fs_source, const char *vs_source) {
@@ -59,51 +70,58 @@ shader_create(struct shader *s, const char *fs_source, const char *vs_source) {
     glDeleteShader(fs);
 }
 
-void 
-shader_set_uniform(struct shader *s, int loc, enum UNIFORM_FORMAT format, const float *v) {
-	switch(format) {
-		case UNIFORM_FLOAT1:
-			{
-				glUniform1f(loc, v[0]);
-				break;
-			}
-		case UNIFORM_FLOAT2:
-			{
-				glUniform2f(loc, v[0], v[1]);
-				break;
-			}
-		case UNIFORM_FLOAT3:
-			{
-				glUniform3f(loc, v[0], v[1], v[2]);
-				break;
-			}
-		case UNIFORM_FLOAT4:
-			{
-				glUniform4f(loc, v[0], v[1], v[2], v[3]);
-				break;
-			}
-		case UNIFORM_FLOAT33:
-			{
-				glUniformMatrix3fv(loc, 1, GL_FALSE, v);
-				break;
-			}
-		case UNIFORM_FLOAT44:
-			{
-				glUniformMatrix4fv(loc, 1, GL_FALSE, v);
-				break;
-			}
-		default:
-			assert(0);
-
-	}
-}
-
-
-int 
+static int 
 shader_uniform_location(struct shader *s, const char *name) {
 	int loc = glGetUniformLocation(s->id, name);
 	return loc;
 }
+
+void 
+shader_set_uniform(struct shader *s, const char *field, enum UNIFORM_FORMAT format, const float *v)
+	int loc = glGetUniformLocation(s->id);
+	if (format > UNIFORM_INVALID && format <= UNIFORM_INT4) {
+		switch(format) {
+			case UNIFORM_INT1:
+				glUniform1i(loc, v[0]);
+				break;
+			case UNIFORM_INT2:
+				glUniform2i(loc, v[0], v[1]);
+				break;
+			case UNIFORM_INT3:
+				glUniform3i(loc, v[0], v[1], v[2]);
+				break;
+			case UNIFORM_INT4:
+				glUniform4i(loc, v[0], v[1], v[2], v[3]);
+				break;
+			default:
+				assert(0);
+		}
+	} else {
+		switch(format) {
+			case UNIFORM_FLOAT1:
+				glUniform1f(loc, v[0]);
+				break;
+			case UNIFORM_FLOAT2:
+				glUniform2f(loc, v[0], v[1]);
+				break;
+			case UNIFORM_FLOAT3:
+				glUniform3f(loc, v[0], v[1], v[2]);
+				break;
+			case UNIFORM_FLOAT4:
+				glUniform4f(loc, v[0], v[1], v[2], v[3]);
+				break;
+			case UNIFORM_FLOAT33:
+				glUniformMatrix3fv(loc, 1, GL_FALSE, v);
+				break;
+			case UNIFORM_FLOAT44:
+				glUniformMatrix4fv(loc, 1, GL_FALSE, v);
+				break;
+			default:
+				assert(0);
+		}
+	}
+}
+
 
 
 void 

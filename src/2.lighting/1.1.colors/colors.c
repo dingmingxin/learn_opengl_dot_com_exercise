@@ -46,23 +46,22 @@ const GLuint WIN_WIDTH = 800, WIN_HEIGHT = 600;
 kmVec3 cameraPos = {0.0f, 0.0f, 3.0f};
 kmVec3 cameraFront = {0, 0, -1.0f};
 kmVec3 cameraUp	= {0.0f, 1.0f, 0.0f};
-float cameraYaw   = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
-float cameraPitch =  0.0f;
 
-float deltaTime = 0.0f; // 当前帧与上一帧的时间差
-float lastFrame = 0.0f; // 上一帧的时间
-bool firstMouse = true;
-float lastX =  800.0f / 2.0;
-float lastY =  600.0 / 2.0;
-float fov =  20.0f;
+static float cameraYaw   = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+static float cameraPitch =  0.0f;
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+static float deltaTime = 0.0f; // 当前帧与上一帧的时间差
+static float lastFrame = 0.0f; // 上一帧的时间
+static bool firstMouse = true;
+static float lastX =  800.0f / 2.0;
+static float lastY =  600.0 / 2.0;
+static float fov =  20.0f;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
-void set_tex_parameters()
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+static void set_tex_parameters()
 {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -70,7 +69,8 @@ void set_tex_parameters()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-struct camera camera;
+static struct camera camera;
+
 
 int 
 main()
@@ -98,45 +98,78 @@ main()
 	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
 
-
+	kmVec3 lightPos = {};
 	GLfloat vertices[] = {
-		-0.5f, 0.5f, 0.0f, 
-		-1.0f, -0.5f, 0.0f,
-		0.0f, -0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f, 
-		1.0f, -0.5f, 0.0f,
-		0.0f, -0.5f, 0.0f,
+		 -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+
+        -0.5f, -0.5f,  0.5f, 
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
+
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f, -0.5f,  0.5f,  
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+
+        -0.5f,  0.5f, -0.5f, 
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
 	}; 
 
 	glewExperimental = GL_TRUE;
 	glewInit();
 
-	struct shader shader;
-	char fragmentShaderSource[SHADER_SOURCE_SIZE];
-	char vertexShaderSource[SHADER_SOURCE_SIZE];
-	shader_source("1.1.colors.fs", fragmentShaderSource, SHADER_SOURCE_SIZE);
-	shader_source("1.1.colors.vs", vertexShaderSource, SHADER_SOURCE_SIZE);
-	shader_create(&shader, fragmentShaderSource, vertexShaderSource);
+	struct shader lightShader, lampShader;
+	shader_create_with_file(&lightShader, "1.1.colors.fs", "1.1.colors.vs");
+	shader_create_with_file(&lampShader, "1.1.lamp.fs", "1.1.lamp.vs");
 
-    GLuint VBO, lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO);
+    GLuint VBO, cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
+    glBindVertexArray(cubeVAO);
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	//position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
     
 
+    GLuint lightVAO;
+    glGenVertexArrays(1, &lightVAO);
+    glBindVertexArray(lightVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	shader_use(&shader);
-
-	float cubePositions[10][3] = {
-		{0.0f,  0.0f,  0.0f}, 
-		{2.0f,  5.0f, -15.0f}, 
-	};
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -155,7 +188,12 @@ main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		shader_use(&shader);
+		shader_use(&lightShader);
+		float vec3[] = {1.0f, 0.5f, 0.31f};
+		shader_set_uniform(&lightShader, "objectColor", UNIFORM_FLOAT3, vec3);
+		vec3[] = {1.0f, 1.0f, 1.0f};
+		shader_set_uniform(&lightShader, "lightColor", UNIFORM_FLOAT3, vec3);
+
 
 		kmMat4 view;
 		camera_view_matrix(&camera, &view);
@@ -163,13 +201,24 @@ main()
 		kmMat4 projection;
 		kmMat4PerspectiveProjection(&projection, fov, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
 
-		glUniformMatrix4fv(glGetUniformLocation(shader.id, "projection"), 1, GL_FALSE, &projection.mat[0]);
-		glUniformMatrix4fv(glGetUniformLocation(shader.id, "view"), 1, GL_FALSE, &view.mat[0]);
+		shader_set_uniform(&lightShader, "projection", UNIFORM_FLOAT44, &projection.mat[0]);
+		shader_set_uniform(&lightShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
+//		glUniformMatrix4fv(glGetUniformLocation(shader.id, "projection"), 1, GL_FALSE, &projection.mat[0]);
+//		glUniformMatrix4fv(glGetUniformLocation(shader.id, "view"), 1, GL_FALSE, &view.mat[0]);
 
-        glBindVertexArray(lightVAO);
-//		glDrawArrays(GL_TRIANGLES, 0, 36);
+		kmMat4 model;
+		shader_set_uniform(&lightShader, "model", UNIFORM_FLOAT44, &model.mat[0]);
 
-        glBindVertexArray(0);
+        glBindVertexArray(cubeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//also draw lamp object
+		shader_use(&lampShader);
+		shader_set_uniform(&lampShader, "projection", UNIFORM_FLOAT44, &projection.mat[0]);
+		shader_set_uniform(&lampShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
+
+		kmMat4 lampModel;
+
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
