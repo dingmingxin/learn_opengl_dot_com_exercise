@@ -100,7 +100,7 @@ main()
 
 	kmVec3 lightPos = {1.2f, 1.0f, 2.0f};
 	GLfloat vertices[] = {
-		 -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
          0.5f, -0.5f, -0.5f,  
          0.5f,  0.5f, -0.5f,  
          0.5f,  0.5f, -0.5f,  
@@ -141,7 +141,7 @@ main()
          0.5f,  0.5f,  0.5f,  
         -0.5f,  0.5f,  0.5f, 
         -0.5f,  0.5f, -0.5f, 
-	}; 
+    };
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -152,11 +152,12 @@ main()
 
     GLuint VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
-    glBindVertexArray(cubeVAO);
-
     glGenBuffers(1, &VBO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(cubeVAO);
 
 	//position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
@@ -166,6 +167,7 @@ main()
     GLuint lightVAO;
     glGenVertexArrays(1, &lightVAO);
     glBindVertexArray(lightVAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -188,37 +190,36 @@ main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		shader_use(&lightShader);
-		float colorObject[3] = {1.0f, 0.5f, 0.31f};
-		shader_set_uniform(&lightShader, "objectColor", UNIFORM_FLOAT3, colorObject);
-		float colorLight[3] = {1.0f, 1.0f, 1.0f};
-		shader_set_uniform(&lightShader, "lightColor", UNIFORM_FLOAT3, colorLight);
-
-
-		kmMat4 view;
+		kmMat4 projection, view, model;
+		kmMat4PerspectiveProjection(&projection, fov, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
 		camera_view_matrix(&camera, &view);
 
-		kmMat4 projection;
-		kmMat4PerspectiveProjection(&projection, fov, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
+		shader_use(&lightShader);
+		float colorObject[3] = {1.0f, 0.5f, 0.31f};
+		float colorLight[3] = {1.0f, 1.0f, 1.0f};
+		shader_set_uniform(&lightShader, "objectColor", UNIFORM_FLOAT3, colorObject);
+		shader_set_uniform(&lightShader, "lightColor", UNIFORM_FLOAT3, colorLight);
 
 		shader_set_uniform(&lightShader, "projection", UNIFORM_FLOAT44, &projection.mat[0]);
 		shader_set_uniform(&lightShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
-
-		kmMat4 model;
+		kmMat4Identity(&model);
 		shader_set_uniform(&lightShader, "model", UNIFORM_FLOAT44, &model.mat[0]);
 
-        glBindVertexArray(cubeVAO);
+		glBindVertexArray(cubeVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		//also draw lamp object
+		//also draw lamp object 白色的灯
 		shader_use(&lampShader);
 		shader_set_uniform(&lampShader, "projection", UNIFORM_FLOAT44, &projection.mat[0]);
 		shader_set_uniform(&lampShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
-
-		kmMat4 lampModel;
-		kmMat4Translation(&lampModel, lightPos.x, lightPos.y, lightPos.z);
-		kmMat4Scaling(&lampModel, 0.5f, 0.5f, 0.5f);
+		kmMat4 lampModel, tmp;
+		kmMat4Identity(&lampModel);
+		kmMat4Translation(&tmp, lightPos.x, lightPos.y, lightPos.z);
+		kmMat4Multiply(&lampModel, &lampModel, &tmp);
+		kmMat4Scaling(&lampModel, 0.2f, 0.2f, 0.2f);
 		shader_set_uniform(&lampShader, "model", UNIFORM_FLOAT44, &lampModel.mat[0]);
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
@@ -228,6 +229,7 @@ main()
 
     glDeleteVertexArrays(1, &lightVAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &cubeVAO);
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
     return 0;
