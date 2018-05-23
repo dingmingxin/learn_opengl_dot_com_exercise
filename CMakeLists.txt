@@ -19,11 +19,12 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	link_directories(/opt/local/lib)
 	link_directories(./src/kazmath/kazmath)
 
+	set(CMAKE_MODULE_PATH   "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 	#find libs
 	find_package(OpenGL)
 	find_package(GLEW)
+	find_package(GLFW)
 	find_package(PkgConfig REQUIRED)
-	pkg_search_module(GLFW REQUIRED glfw3)
 
 	list(APPEND LINK_LIBS "") #create empty list
 	if(OPENGL_FOUND)
@@ -33,7 +34,8 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 		list(APPEND LINK_LIBS ${GLEW_LIBRARIES})
 	endif()
 	if(GLFW_FOUND)
-		list(APPEND LINK_LIBS ${GLFW_LIBRARIES})
+		list(APPEND LINK_LIBS ${GLFW_LIBRARY})
+		message(STATUS "glfw_libraries ${GLFW_LIBRARY}")
 	endif()
 endif()
 

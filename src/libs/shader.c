@@ -11,14 +11,14 @@
 
 
 static bool
-check_compile_error(GLuint s)  {
+check_compile_error(GLuint s, const char *type)  {
 	GLint success;
 	GLchar infoLog[512];
 
 	glGetShaderiv(s, GL_COMPILE_STATUS, &success);
 	if (!success) {
 		glGetShaderInfoLog(s, 512, NULL, infoLog);
-		printf("ERROR:shader: vertex compile failed:%s\n", infoLog);
+		printf("ERROR: %s shader: compile failed:%s\n", type, infoLog);
 	}
 	if (!success) {
 		return false;
@@ -36,8 +36,8 @@ shader_use(const struct shader *s) {
 void
 shader_create_with_file(struct shader *s, const char *fs_file, const char *vs_file) {
 	int sz = 1024;
-	char fragmentShaderSource[1024];
-	char vertexShaderSource[1024];
+	char fragmentShaderSource[1024]="";
+	char vertexShaderSource[1024]="";
 	shader_source(fs_file, fragmentShaderSource, sz);
 	shader_source(vs_file, vertexShaderSource, sz);
 	shader_create(s, fragmentShaderSource, vertexShaderSource);
@@ -49,17 +49,19 @@ shader_create(struct shader *s, const char *fs_source, const char *vs_source) {
     s->id = id;
 
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+//	GLint vs_len = strlen(vs_source);
 	glShaderSource(vs, 1, &vs_source, NULL);
 	glCompileShader(vs);
 
-	check_compile_error(vs);
+	check_compile_error(vs, "vs");
 
 
 	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+//	GLint fs_len = strlen(fs_source);
 	glShaderSource(fs, 1, &fs_source, NULL);
 	glCompileShader(fs);
 
-	check_compile_error(fs);
+	check_compile_error(fs, "fs");
 
 	glAttachShader(id, vs);
 	glAttachShader(id, fs);
@@ -77,8 +79,8 @@ shader_uniform_location(struct shader *s, const char *name) {
 }
 
 void 
-shader_set_uniform(struct shader *s, const char *field, enum UNIFORM_FORMAT format, const float *v)
-	int loc = glGetUniformLocation(s->id);
+shader_set_uniform(struct shader *s, const char *field, enum UNIFORM_FORMAT format, const float *v) {
+	int loc = glGetUniformLocation(s->id, field);
 	if (format > UNIFORM_INVALID && format <= UNIFORM_INT4) {
 		switch(format) {
 			case UNIFORM_INT1:
@@ -125,7 +127,7 @@ shader_set_uniform(struct shader *s, const char *field, enum UNIFORM_FORMAT form
 
 
 void 
-shader_source(char *name, char *buf, int sz) {
+shader_source(const char *name, char *buf, int sz) {
 	FILE *fp = NULL;
 #ifdef BIN_PATH
 	char fname[1024] = "";

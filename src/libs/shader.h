@@ -24,7 +24,7 @@ void shader_create(struct shader *s, const char *fs, const char *vs);
 void shader_create_with_file(struct shader *s, const char *fs_file, const char *vs_file);
 void shader_use(const struct shader *s);
 void shader_set_uniform(struct shader *s, const char *field, enum UNIFORM_FORMAT format, const float *v);
-void shader_source(char *filename, char *buf, int sz);
+void shader_source(const char *name, char *buf, int sz);
 
 
 #endif   /* ----- #ifndef SHADER_INC  ----- */

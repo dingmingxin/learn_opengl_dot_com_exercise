@@ -98,7 +98,7 @@ main()
 	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
 
-	kmVec3 lightPos = {};
+	kmVec3 lightPos = {1.2f, 1.0f, 2.0f};
 	GLfloat vertices[] = {
 		 -0.5f, -0.5f, -0.5f, 
          0.5f, -0.5f, -0.5f,  
@@ -189,10 +189,10 @@ main()
 		lastFrame = currentFrame;
 
 		shader_use(&lightShader);
-		float vec3[] = {1.0f, 0.5f, 0.31f};
-		shader_set_uniform(&lightShader, "objectColor", UNIFORM_FLOAT3, vec3);
-		vec3[] = {1.0f, 1.0f, 1.0f};
-		shader_set_uniform(&lightShader, "lightColor", UNIFORM_FLOAT3, vec3);
+		float colorObject[3] = {1.0f, 0.5f, 0.31f};
+		shader_set_uniform(&lightShader, "objectColor", UNIFORM_FLOAT3, colorObject);
+		float colorLight[3] = {1.0f, 1.0f, 1.0f};
+		shader_set_uniform(&lightShader, "lightColor", UNIFORM_FLOAT3, colorLight);
 
 
 		kmMat4 view;
@@ -203,8 +203,6 @@ main()
 
 		shader_set_uniform(&lightShader, "projection", UNIFORM_FLOAT44, &projection.mat[0]);
 		shader_set_uniform(&lightShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
-//		glUniformMatrix4fv(glGetUniformLocation(shader.id, "projection"), 1, GL_FALSE, &projection.mat[0]);
-//		glUniformMatrix4fv(glGetUniformLocation(shader.id, "view"), 1, GL_FALSE, &view.mat[0]);
 
 		kmMat4 model;
 		shader_set_uniform(&lightShader, "model", UNIFORM_FLOAT44, &model.mat[0]);
@@ -218,7 +216,9 @@ main()
 		shader_set_uniform(&lampShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
 
 		kmMat4 lampModel;
-
+		kmMat4Translation(&lampModel, lightPos.x, lightPos.y, lightPos.z);
+		kmMat4Scaling(&lampModel, 0.5f, 0.5f, 0.5f);
+		shader_set_uniform(&lampShader, "model", UNIFORM_FLOAT44, &lampModel.mat[0]);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
