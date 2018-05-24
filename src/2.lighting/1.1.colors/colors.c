@@ -98,7 +98,7 @@ main()
 	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
 
-	kmVec3 lightPos = {1.2f, 1.0f, 2.0f};
+	kmVec3 lightPos = {0.6f, 0.5f, 0};
 	GLfloat vertices[] = {
         -0.5f, -0.5f, -0.5f, 
          0.5f, -0.5f, -0.5f,  
@@ -164,9 +164,9 @@ main()
     glEnableVertexAttribArray(0);
     
 
-    GLuint lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO);
+    GLuint lampVAO;
+    glGenVertexArrays(1, &lampVAO);
+    glBindVertexArray(lampVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
@@ -183,7 +183,7 @@ main()
         // Render
         // Clear the colorbuffer
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //计算时间差
 		float currentFrame = glfwGetTime();
@@ -191,19 +191,22 @@ main()
 		lastFrame = currentFrame;
 
 		kmMat4 projection, view, model;
-		kmMat4PerspectiveProjection(&projection, fov, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
+		kmMat4PerspectiveProjection(&projection, 45.0f, (float)WIN_WIDTH/(float)WIN_HEIGHT, 0.1f, 100.0f);
 		camera_view_matrix(&camera, &view);
 
 		shader_use(&lightShader);
 		float colorObject[3] = {1.0f, 0.5f, 0.31f};
 		float colorLight[3] = {1.0f, 1.0f, 1.0f};
-		shader_set_uniform(&lightShader, "objectColor", UNIFORM_FLOAT3, colorObject);
-		shader_set_uniform(&lightShader, "lightColor", UNIFORM_FLOAT3, colorLight);
-
+		kmMat4Identity(&model);
 		shader_set_uniform(&lightShader, "projection", UNIFORM_FLOAT44, &projection.mat[0]);
 		shader_set_uniform(&lightShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
-		kmMat4Identity(&model);
+		kmMat4 modelRotation;
+		float m_rotation_angle = kmDegreesToRadians(10.0f *glfwGetTime());
+		kmMat4RotationYawPitchRoll(&modelRotation, 1.0f*m_rotation_angle, 0.6f*m_rotation_angle, 0.5f*m_rotation_angle);
+		kmMat4Multiply(&model, &model, &modelRotation);
 		shader_set_uniform(&lightShader, "model", UNIFORM_FLOAT44, &model.mat[0]);
+		shader_set_uniform(&lightShader, "objectColor", UNIFORM_FLOAT3, colorObject);
+		shader_set_uniform(&lightShader, "lightColor", UNIFORM_FLOAT3, colorLight);
 
 		glBindVertexArray(cubeVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -212,13 +215,23 @@ main()
 		shader_use(&lampShader);
 		shader_set_uniform(&lampShader, "projection", UNIFORM_FLOAT44, &projection.mat[0]);
 		shader_set_uniform(&lampShader, "view", UNIFORM_FLOAT44, &view.mat[0]);
+
 		kmMat4 lampModel, tmp;
 		kmMat4Identity(&lampModel);
 		kmMat4Translation(&tmp, lightPos.x, lightPos.y, lightPos.z);
 		kmMat4Multiply(&lampModel, &lampModel, &tmp);
-		kmMat4Scaling(&lampModel, 0.2f, 0.2f, 0.2f);
+
+		kmMat4 rotationm;
+		float angle = kmDegreesToRadians(10.0f * glfwGetTime());
+		kmMat4RotationYawPitchRoll(&rotationm, 1.0f*angle, 0.6f*angle, 0.5f*angle);
+		kmMat4Multiply(&lampModel, &lampModel, &rotationm);
+
+		kmMat4 scalem;
+		kmMat4Scaling(&scalem, 0.2f, 0.2f, 0.2f);
+		kmMat4Multiply(&lampModel, &lampModel, &scalem);
+
 		shader_set_uniform(&lampShader, "model", UNIFORM_FLOAT44, &lampModel.mat[0]);
-		glBindVertexArray(lightVAO);
+		glBindVertexArray(lampVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Swap the screen buffers
@@ -227,7 +240,7 @@ main()
 
     }
 
-    glDeleteVertexArrays(1, &lightVAO);
+    glDeleteVertexArrays(1, &lampVAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &cubeVAO);
     // Terminate GLFW, clearing any resources allocated by GLFW.
