@@ -184,10 +184,14 @@ list(APPEND NEED_SHADER_CLASS_SOURCE_LIST
 	"7.3.camera_mouse_zoom"
 	"7.4.camera_class"
 	"1.1.colors"
+	"2.1.basic_lighting_diffuse"
+	"2.2.basic_lighting_specular"
 	)
 list(APPEND NEED_CAMERA_CLASS_SOURCE_LIST 
 	"7.4.camera_class"
 	"1.1.colors"
+	"2.1.basic_lighting_diffuse"
+	"2.2.basic_lighting_specular"
 	)
 
 foreach(EXTRA_SOURCE ${NEED_SHADER_CLASS_SOURCE_LIST})
