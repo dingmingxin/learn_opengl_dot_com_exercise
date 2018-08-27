@@ -17,8 +17,9 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	include_directories(/opt/local/include)
 	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/glad/include)
+	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 	link_directories(/opt/local/lib)
-	link_directories(./src/kazmath/kazmath)
+	link_directories(./libs/kazmath/kazmath)
 
 	set(CMAKE_MODULE_PATH   "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 	#find libs
@@ -43,7 +44,7 @@ endif()
 add_subdirectory(libs/glad)
 link_directories(libs/glad)
 
-list(APPEND LINK_LIBS "kazmath")
+#list(APPEND LINK_LIBS "kazmath")
 
 add_custom_target(BUILD_KAZMATH_LIB ALL)
 
@@ -53,7 +54,7 @@ add_custom_command(TARGET BUILD_KAZMATH_LIB
 	COMMENT "This command will be executed before building target BUILD_KAZMATH_LIB"
 
 	COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} submodule update --init
-	COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/src/kazmath && cmake . && make kazmath
+	COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/libs/kazmath && cmake . && make kazmath
 	)
 
 set(CHAPTERS
@@ -207,6 +208,7 @@ foreach(EXTRA_SOURCE ${NEED_CAMERA_CLASS_SOURCE_LIST})
 endforeach()
 
 find_library(GLAD_STATIC_LIBRARY glad HINTS libs/glad)
+find_library(KAZMATH_STATIC_LIBRARY kazmath HINTS libs/kazmath/kazmath)
 
 # then create a project file per tutorial
 foreach(CHAPTER ${CHAPTERS})
@@ -225,7 +227,7 @@ foreach(CHAPTER ${CHAPTERS})
 			if(${SOURCE_FILES_LEN} GREATER 0)
 				add_executable(${NAME} ${SOURCE})
 				add_dependencies(${NAME} BUILD_KAZMATH_LIB)
-				target_link_libraries(${NAME} "${LINK_LIBS} ${GLAD_STATIC_LIBRARY}")
+				target_link_libraries(${NAME} "${LINK_LIBS} ${GLAD_STATIC_LIBRARY} ${KAZMATH_STATIC_LIBRARY}" )
 				target_compile_definitions(${NAME} PRIVATE BIN_PATH="${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}/")
 				set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}")
 				# copy shader files to build directory
