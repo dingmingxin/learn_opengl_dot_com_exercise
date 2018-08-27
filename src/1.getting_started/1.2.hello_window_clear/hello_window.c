@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #define GLEW_STATIC
-//glew
-#include <GL/glew.h>
+#include <glad/glad.h>
 //glfw
 #include <GLFW/glfw3.h>
 
@@ -31,13 +29,11 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			return -1;
+		}
 
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK)
-	{
-		printf("Failed to initialize GLEW");
-		return -1;
-	}
+
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 

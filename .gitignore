@@ -10,3 +10,4 @@ GTAGS
 GRTAGS
 .gtags.files
 tags
+*.a

@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 // GLEW
-#define GLEW_STATIC
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 // GLFW
 #include <GLFW/glfw3.h>
@@ -45,14 +44,16 @@ int main()
     // Create a GLFWwindow object that we can use for GLFW's functions
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", NULL, NULL);
     glfwMakeContextCurrent(window);
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			return -1;
+		}
+
 
     // Set the required callback functions
     glfwSetKeyCallback(window, key_callback);
 
     // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
-    glewExperimental = GL_TRUE;
     // Initialize GLEW to setup the OpenGL Function pointers
-    glewInit();
 
     // Define the viewport dimensions
     int width, height;

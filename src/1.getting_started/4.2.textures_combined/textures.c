@@ -4,9 +4,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#define GLEW_STATIC
 #define SHADER_SOURCE_SIZE 1024
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
 
@@ -111,13 +110,15 @@ main()
 	//create a glfwwindow object that we can use for glfw`s functions
 	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "LearnOpenGL", NULL, NULL);
 	glfwMakeContextCurrent(window);
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			return -1;
+		}
+
 
 
 	//set the require callback functions
 	glfwSetKeyCallback(window, key_callback);
 
-	glewExperimental = GL_TRUE;
-	glewInit();
 
 	//viewport
 	int viewPortWidth, viewPortHeight;

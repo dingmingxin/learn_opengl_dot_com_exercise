@@ -36,8 +36,7 @@
 #define MAX_FOV 75.0f
 #define MIN_FOV 1.0f
 
-#define GLEW_STATIC
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
 
@@ -83,6 +82,10 @@ main()
 	//create a glfwwindow object that we can use for glfw`s functions
 	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "LearnOpenGL", NULL, NULL);
 	glfwMakeContextCurrent(window);
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			return -1;
+		}
+
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -137,8 +140,6 @@ main()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
 
-	glewExperimental = GL_TRUE;
-	glewInit();
 
 
 	struct shader lightShader, lampShader;

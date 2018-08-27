@@ -20,8 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define GLEW_STATIC
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
 
@@ -63,12 +62,14 @@ main()
 
 	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "LearnOpenGL", NULL, NULL);
 	glfwMakeContextCurrent(window);
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			return -1;
+		}
+
 
 
 	glfwSetKeyCallback(window, key_callback);
 
-	glewExperimental = GL_TRUE;
-	glewInit();
 
 	//viewport
 	int viewPortWidth, viewPortHeight;
